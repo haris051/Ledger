@@ -52,7 +52,7 @@ BEGIN
                     from 
                                 Daily_Account_Balance 
                     where 
-                                Daily_Account_Balance.ENTRYDATE<convert(P_ENTRY_DATE_FROM,Date)
+                                Daily_Account_Balance.ENTRYDATE<DATE(P_ENTRY_DATE_FROM)
                     and 
                                 Daily_Account_Balance.AccountId=P_ACCOUNT_ID;
                   
@@ -66,7 +66,7 @@ BEGIN
                     from 
                                 Daily_Account_Balance 
                     where 
-                                Daily_Account_Balance.ENTRYDATE<convert(P_ENTRY_DATE_TO,Date)
+                                Daily_Account_Balance.ENTRYDATE<DATE(P_ENTRY_DATE_TO)
                     and 
                                 Daily_Account_Balance.AccountId=P_ACCOUNT_ID;
 					
@@ -244,7 +244,7 @@ BEGIN
 															CASE
 															
 																	WHEN P_ENTRY_DATE_TO <> "" 
-																	THEN FORM_DATE <=P_ENTRY_DATE_TO
+																	THEN FORM_DATE <=Date(P_ENTRY_DATE_TO)
 																	ELSE TRUE
 															
 															END
@@ -254,7 +254,7 @@ BEGIN
 															CASE 
 																
 																   When P_ENTRY_DATE_FROM <> ""
-																   Then FORM_DATE >= P_ENTRY_DATE_FROM
+																   Then FORM_DATE >=Date(P_ENTRY_DATE_FROM)
 																   Else TRUE 
 															  
 															END
@@ -317,7 +317,7 @@ BEGIN
 															CASE
 													
 																	WHEN P_ENTRY_DATE_TO <> "" 
-																	THEN FORM_DATE <= P_ENTRY_DATE_TO
+																	THEN FORM_DATE <= Date(P_ENTRY_DATE_TO)
 																	ELSE TRUE
 															
 															END
@@ -326,7 +326,7 @@ BEGIN
 														    CASE 
 															
 																   When P_ENTRY_DATE_FROM <> ""
-																   Then FORM_DATE >= P_ENTRY_DATE_FROM
+																   Then FORM_DATE >= Date(P_ENTRY_DATE_FROM)
 																   Else TRUE 
 														  
 														    END
@@ -415,7 +415,7 @@ BEGIN
 															CASE
 															
 																WHEN P_ENTRY_DATE_TO <> "" 
-																THEN FORM_DATE <=P_ENTRY_DATE_TO
+																THEN FORM_DATE <=Date(P_ENTRY_DATE_TO)
 																ELSE TRUE
 															
 															END
@@ -424,7 +424,7 @@ BEGIN
 															CASE 
 															
 																 When P_ENTRY_DATE_FROM <> ""
-																 Then FORM_DATE >= P_ENTRY_DATE_FROM
+																 Then FORM_DATE >=Date(P_ENTRY_DATE_FROM)
 																 Else TRUE 
 														  
 															END
@@ -506,7 +506,7 @@ BEGIN
 														  CASE
 															
 																WHEN P_ENTRY_DATE_TO <> "" 
-																THEN FORM_DATE <=P_ENTRY_DATE_TO
+																THEN FORM_DATE <=Date(P_ENTRY_DATE_TO)
 																ELSE TRUE
 														  
 														  END
@@ -514,7 +514,7 @@ BEGIN
 
 														  CASE 
 															   When P_ENTRY_DATE_FROM <> ""
-															   Then FORM_DATE >= P_ENTRY_DATE_FROM
+															   Then FORM_DATE >= Date(P_ENTRY_DATE_FROM)
 															   Else TRUE 
 														  END
 
@@ -575,7 +575,7 @@ BEGIN
 															CASE
 															
 																	WHEN P_ENTRY_DATE_TO <> "" 
-																	THEN FORM_DATE <=P_ENTRY_DATE_TO
+																	THEN FORM_DATE <= Date(P_ENTRY_DATE_TO)
 																	ELSE TRUE
 															
 															END
@@ -583,7 +583,7 @@ BEGIN
 													
 																CASE 
 																	   When P_ENTRY_DATE_FROM <> ""
-																	   Then FORM_DATE >= P_ENTRY_DATE_FROM
+																	   Then FORM_DATE >= Date(P_ENTRY_DATE_FROM)
 																	   Else TRUE 
 																END
 
@@ -649,7 +649,7 @@ BEGIN
 																CASE
 													
 																		WHEN P_ENTRY_DATE_TO <> ""
-																		THEN FORM_DATE <= P_ENTRY_DATE_TO
+																		THEN FORM_DATE <= Date(P_ENTRY_DATE_TO)
 																		ELSE TRUE
 																
 																END
@@ -657,7 +657,7 @@ BEGIN
 													
 																CASE 
 																	   When P_ENTRY_DATE_FROM <> ""
-																	   Then FORM_DATE >= P_ENTRY_DATE_FROM
+																	   Then FORM_DATE >= Date(P_ENTRY_DATE_FROM)
 																	   Else TRUE 
 																END
 
