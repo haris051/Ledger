@@ -16,6 +16,8 @@ BEGIN
 					Declare BalanceTo decimal Default 0;
 					Declare TotalDebit decimal default 0;
 					Declare TotalCredit decimal default 0;
+					Declare DebitFrom decimal default 0;
+					Declare CreditFrom decimal default 0;
                     
 					
                     select 
@@ -46,9 +48,13 @@ BEGIN
 
 
 				    select 
-                                SUM(BALANCE) 
+                                SUM(BALANCE),
+							    SUM(Debit),
+								SUM(Credit)
                     into 
-                                BalanceFrom
+                                BalanceFrom,
+								DebitFrom,
+								CreditFrom								
                     from 
                                 Daily_Account_Balance 
                     where 
@@ -72,32 +78,10 @@ BEGIN
 					
 					
 					
+								
 					
-				
-								select  
-										SQL_NO_CACHE
-										A.Unique_Rows,
-										A.id,
-										A.FORM_FLAG,
-										A.ACC_ID,
-										A.DESCRIPTION,
-										A.FORM_DATE,
-										A.FORM_REFERENCE,
-										A.FORM_TYPE,
-										A.DEBIT,
-										A.CREDIT,
-										A.TBalance + IFNULL(BalanceFrom,0)  as BALANCE,
-										A.GL_FLAG,
-										A.DETAIL_ID,
-										A.FORM_ID,
-										A.Total_Debit,
-										A.Total_Credit,
-										A.BEG_BAL,
-										Count(*) Over() as Total_Rows
-								from (
 								select 		
-										SQL_NO_CACHE
-										A.Unique_Rows,
+										
 										A.id,
 										A.FORM_FLAG,
 										A.ACC_ID,
@@ -112,39 +96,20 @@ BEGIN
 									    then 
 											IFNULL(A.BALANCE,0)
 									    else	
-											SUM(A.Balance) OVER(Order by ISNULL(A.Unique_Rows),A.Unique_Rows asc)
+											SUM(A.Balance) OVER(Order by ISNULL(A.FORM_DATE),A.FORM_DATE asc,A.FORM_ID asc,A.FORM_FLAG asc,A.Detail_ID asc,A.FORM_FLAG asc)
 										END
-										as TBalance,
+										as BALANCE,
 										A.GL_FLAG,
 										A.DETAIL_ID,
 										A.FORM_ID,
 										A.Total_Debit,
 										A.Total_Credit,
-										A.BEG_BAL
-							from (
-							select 
+										IFNULL(A.BEG_BAL,0) as BEG_BAL,
+										A.TOTAL_ROWS
 										
-										A.id,
-										A.FORM_FLAG,
-										A.ACC_ID,
-										A.DESCRIPTION,
-										A.FORM_DATE,
-										A.FORM_REFERENCE,
-										A.FORM_TYPE,
-										A.DEBIT,
-										A.CREDIT,
-										A.BALANCE,
-										A.GL_FLAG,
-										A.DETAIL_ID,
-										A.FORM_ID,
-										A.Total_Debit,
-										A.Total_Credit,
-										A.BEG_BAL,
-										Case when A.id is null then null else ROW_NUMBER() OVER (Order by ISNULL(A.id)) End as UNIQUE_ROWS
-								from (
-							 
-									SELECT 
-										  
+							from (
+										SELECT 
+                                          
                                           A.id,
 										  A.FORM_FLAG,
 										  A.ACC_ID,
@@ -189,13 +154,18 @@ BEGIN
 										  A.FORM_ID,
 										  IFNULL(TotalDebit,0) as Total_Debit,
 										  IFNULL(TotalCredit,0) as Total_Credit,
-										  IFNULL(BalanceFrom,0) as BEG_BAL
+										  IFNULL(BalanceFrom,0) as BEG_BAL,
+										  COUNT(*) OVER() as TOTAL_ROWS
+										  
 									 FROM 
 										(
+								
 										 select 
 												*
 										 From 
 											(
+													-- Stock Accounting --
+													
 													SELECT 
 															
 															CASE
@@ -334,11 +304,11 @@ BEGIN
 													
 															GL_ACC_ID=P_ACCOUNT_ID	
 														  
-														-- Repair Accounting -- 								  
+													-- Repair Accounting -- 								  
 
 														 UNION ALL
 
-														-- Payments Accounting --											
+													-- Payments Accounting --											
 
 													
 													SELECT 
@@ -434,12 +404,12 @@ BEGIN
 													
 													GL_ACC_ID=P_ACCOUNT_ID														
 															  
-														-- Payments Accounting --											
+													-- Payments Accounting --											
 
 
 																UNION ALL
 
-														-- Sales Accounting --
+													-- Sales Accounting --
 
 															  
 													SELECT 
@@ -522,12 +492,12 @@ BEGIN
 													
 														GL_ACC_ID=P_ACCOUNT_ID
 														
-															-- Sales Accounting --
+													-- Sales Accounting --
 
 															 UNION ALL
 															
 																			
-															-- Purchase Accounting --											
+													-- Purchase Accounting --											
 																		
 													SELECT 
 																					
@@ -591,13 +561,13 @@ BEGIN
 													
 														GL_ACC_ID=P_ACCOUNT_ID																		 
 																		   
-															-- Purchase Accounting --											
+													-- Purchase Accounting --											
 
 
 
 																 UNION ALL
 
-															-- ADJUSTMENT Accounting--	
+													-- ADJUSTMENT Accounting --	
 															
 															
 													SELECT
@@ -665,9 +635,31 @@ BEGIN
 													
 																GL_ACC_ID=P_ACCOUNT_ID
 													    
-														-- ADJUSTMENT Accounting--
+													-- ADJUSTMENT Accounting --
+                                                        
+                                                       UNION ALL 
+													   
+													-- Beginning Balance --
+													   
+													 Select 
+															IFNULL(DebitFrom,0) as Debit,
+															IFNULL(CreditFrom,0) as Credit,
+															P_ACCOUNT_ID as ACCOUNT_ID,
+															AccountId AS ACC_ID						,
+															AccountDescription AS DESCRIPTION		,
+															AccountType AS ACCOUNT_TYPE_ID			,
+															'00'  as GL_FLAG 						,
+															'0000-00-00' as FORM_DATE				,
+															'Beginning Balance' as Form_Reference   ,
+															'0'     as FORM_ID 						,
+															'BEG_BAL' as FORM_FLAG 					,
+															'-1'      as ID                         ,
+															'-1'      as Detail_Id
+                                                        
+													-- Beginning Balance --
 													
-											)A Order by A.FORM_Date ASC
+											)A Order by A.FORM_DATE asc,A.FORM_ID asc,A.FORM_FLAG asc,A.Detail_ID asc,A.FORM_FLAG asc 
+									
 										) A
 										group BY
 										A.id,
@@ -683,23 +675,12 @@ BEGIN
 										A.FORM_ID
 										with ROLLUP 
 										having A.id is null OR A.FORM_ID is not null
-									
-									  
-										
 									)A
-									
-									ORDER by ISNULL(A.Id)
-								)A 
-									
-									Order by ISNULL(A.Unique_Rows),A.Unique_Rows asc
-									)A
-									LIMIT P_START,P_LENGTH;
-									
-									
-									
-									
-									
+                                    Order by ISNULL(A.FORM_DATE),A.FORM_DATE asc,A.FORM_ID asc,A.FORM_FLAG asc,A.Detail_ID asc,A.FORM_FLAG asc
+									Limit P_START,P_LENGTH;
 										
     
 END $$
 DELIMITER ;
+
+
