@@ -121,7 +121,7 @@ BEGIN
 												WHEN A.GL_FLAG = 15 OR A.GL_FLAG = 16 OR A.GL_FLAG = 510 OR A.GL_FLAG = 511 THEN 'Payment Sent'
 												WHEN A.GL_FLAG = 19 OR A.GL_FLAG = 20 OR A.GL_FLAG = 512 OR A.GL_FLAG = 513 THEN 'Receive Money'
 												WHEN A.GL_FLAG = 101 OR A.GL_FLAG = 26 OR A.GL_FLAG = 23 OR A.GL_FLAG = 201 OR A.GL_FLAG = 102 OR A.GL_FLAG = 203 OR A.GL_FLAG = 103 OR A.GL_FLAG = 104 OR A.GL_FLAG = 105 OR A.GL_FLAG = 106  THEN 'Payments'
-												WHEN A.GL_FLAG = 107 OR A.GL_FLAG = 29 OR A.GL_FLAG = 28 OR A.GL_FLAG = 204 OR A.GL_FLAG = 205 OR A.GL_FLAG = 108 OR A.GL_FLAG = 109 OR A.GL_FLAG = 110 OR A.GL_FLAG = 111 OR A.GL_FLAG = 113 OR A.GL_FLAG = 114 OR A.GL_FLAG = 112 THEN 'Receipts'
+												WHEN A.GL_FLAG = 107 OR A.GL_FLAG = 29 OR A.GL_FLAG = 28 OR A.GL_FLAG = 204 OR A.GL_FLAG = 205 OR A.GL_FLAG = 108 OR A.GL_FLAG = 109 OR A.GL_FLAG = 110 OR A.GL_FLAG = 111 OR A.GL_FLAG = 113 OR A.GL_FLAG = 114 OR A.GL_FLAG = 112 OR A.GL_FLAG = 5552 OR A.GL_FLAG =5551 THEN 'Receipts'
 												WHEN A.GL_FLAG = 31 OR A.GL_FLAG = 32 OR A.GL_FLAG = 33 OR A.GL_FLAG = 34 THEN 'Partial Credit'
 												WHEN A.GL_FLAG = 37 OR A.GL_FLAG = 38 THEN 'Receive Order'
 												WHEN A.GL_FLAG = 39 OR A.GL_FLAG = 40 THEN 'Vendor Credit Memo'
@@ -164,8 +164,6 @@ BEGIN
 												*
 										 From 
 											(
-													-- Stock Accounting --
-													
 													SELECT 
 															
 															CASE
@@ -304,11 +302,11 @@ BEGIN
 													
 															GL_ACC_ID=P_ACCOUNT_ID	
 														  
-													-- Repair Accounting -- 								  
+														-- Repair Accounting -- 								  
 
 														 UNION ALL
 
-													-- Payments Accounting --											
+														-- Payments Accounting --											
 
 													
 													SELECT 
@@ -320,15 +318,17 @@ BEGIN
 																 When (A.GL_FLAG = 513) then A.Amount
 																 When (A.GL_FLAG = 19)  then A.Amount 
 																 When (A.GL_FLAG = 26)  then A.Amount 
-																 When (A.GL_FLAG = 102) then A.Amount 
+																 When (A.GL_FLAG = 201)  then A.Amount
 																 When (A.GL_FLAG = 203) then A.Amount 
 																 When (A.GL_FLAG = 103) then A.Amount 
 																 When (A.GL_FLAG = 105) then A.Amount
-																 When (A.GL_FLAG = 107) then A.Amount 
+																 When (A.GL_FLAG = 107) then A.Amount
+																 When (A.GL_FLAG = 204) then A.Amount			
 																 When (A.GL_FLAG = 205) then A.Amount
 																 When (A.GL_FLAG = 110) then A.Amount 
 																 When (A.GL_FLAG = 113) then A.Amount 
 																 When (A.GL_FLAG = 112) then A.Amount 
+																 When (A.GL_FLAG = 5551) then A.Amount 
 																 When (A.GL_FLAG = 89)  then A.Amount
 																 When (A.GL_FLAG = 116) then A.Amount
 																 When (A.GL_FLAG = 117) then A.Amount
@@ -342,16 +342,16 @@ BEGIN
 																 When (A.GL_FLAG = 20)  then A.Amount
 																 When (A.GL_FLAG = 101) then A.Amount 
 																 When (A.GL_FLAG = 23)  then A.Amount
-																 When (A.GL_FLAG = 201) then A.Amount 
+																 When (A.GL_FLAG = 102) then A.Amount 
 																 When (A.GL_FLAG = 104) then A.Amount 
 																 When (A.GL_FLAG = 106) then A.Amount
 																 When (A.GL_FLAG = 29)  then A.Amount 
-																 When (A.GL_FLAG = 28)  then A.Amount 
-																 When (A.GL_FLAG = 204) then A.Amount 
+																 When (A.GL_FLAG = 28)  then A.Amount  
 																 When (A.GL_FLAG = 108) then A.Amount 
 																 When (A.GL_FLAG = 109) then A.Amount 
 																 When (A.GL_FLAG = 111) then A.Amount 
-																 When (A.GL_FLAG = 114) then A.Amount 
+																 When (A.GL_FLAG = 114) then A.Amount
+																 When (A.GL_FLAG = 5552) then A.Amount 																 
 																 When (A.GL_FLAG = 115) then A.Amount 
 																 When (A.GL_FLAG = 90)  then A.Amount 														
 															
@@ -404,12 +404,12 @@ BEGIN
 													
 													GL_ACC_ID=P_ACCOUNT_ID														
 															  
-													-- Payments Accounting --											
+														-- Payments Accounting --											
 
 
 																UNION ALL
 
-													-- Sales Accounting --
+														-- Sales Accounting --
 
 															  
 													SELECT 
@@ -424,10 +424,11 @@ BEGIN
 																When (A.GL_FLAG = 83) then A.Amount 
 																When (A.GL_FLAG = 84) then A.Amount 
 																When (A.GL_FLAG = 49) then A.Amount 
-																When (A.GL_FLAG = 52) then A.Amount 
+																When (A.GL_FLAG = 52) then A.Amount
+																When (A.GL_FLAG = 100) then A.Amount 																
 																When (A.GL_FLAG = 53) then A.Amount 
 																When (A.GL_FLAG = 55) then A.Amount 
-																When (A.GL_FLAG = 100) then A.Amount                                            
+																                                           
 															
 															END AS DEBIT       			             ,
 														  
@@ -492,12 +493,12 @@ BEGIN
 													
 														GL_ACC_ID=P_ACCOUNT_ID
 														
-													-- Sales Accounting --
+															-- Sales Accounting --
 
 															 UNION ALL
 															
 																			
-													-- Purchase Accounting --											
+															-- Purchase Accounting --											
 																		
 													SELECT 
 																					
@@ -561,13 +562,13 @@ BEGIN
 													
 														GL_ACC_ID=P_ACCOUNT_ID																		 
 																		   
-													-- Purchase Accounting --											
+															-- Purchase Accounting --											
 
 
 
 																 UNION ALL
 
-													-- ADJUSTMENT Accounting --	
+															-- ADJUSTMENT Accounting--	
 															
 															
 													SELECT
@@ -635,11 +636,9 @@ BEGIN
 													
 																GL_ACC_ID=P_ACCOUNT_ID
 													    
-													-- ADJUSTMENT Accounting --
+														-- ADJUSTMENT Accounting--
                                                         
                                                        UNION ALL 
-													   
-													-- Beginning Balance --
 													   
 													 Select 
 															IFNULL(DebitFrom,0) as Debit,
@@ -656,7 +655,6 @@ BEGIN
 															'-1'      as ID                         ,
 															'-1'      as Detail_Id
                                                         
-													-- Beginning Balance --
 													
 											)A Order by A.FORM_DATE asc,A.FORM_ID asc,A.FORM_FLAG asc,A.Detail_ID asc,A.FORM_FLAG asc 
 									
