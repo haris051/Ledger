@@ -120,7 +120,7 @@ BEGIN
 										  
 												WHEN A.GL_FLAG = 15 OR A.GL_FLAG = 16 OR A.GL_FLAG = 510 OR A.GL_FLAG = 511 THEN 'Payment Sent'
 												WHEN A.GL_FLAG = 19 OR A.GL_FLAG = 20 OR A.GL_FLAG = 512 OR A.GL_FLAG = 513 THEN 'Receive Money'
-												WHEN A.GL_FLAG = 101 OR A.GL_FLAG = 26 OR A.GL_FLAG = 23 OR A.GL_FLAG = 201 OR A.GL_FLAG = 102 OR A.GL_FLAG = 203 OR A.GL_FLAG = 103 OR A.GL_FLAG = 104 OR A.GL_FLAG = 105 OR A.GL_FLAG = 106  THEN 'Payments'
+												WHEN A.GL_FLAG = 101 OR A.GL_FLAG = 26 OR A.GL_FLAG = 23 OR A.GL_FLAG = 201 OR A.GL_FLAG = 102 OR A.GL_FLAG = 203 OR A.GL_FLAG = 103 OR A.GL_FLAG = 104 OR A.GL_FLAG = 105 OR A.GL_FLAG = 106 OR A.GL_FLAG = 5553 OR A.GL_FLAG=5554 THEN 'Payments'
 												WHEN A.GL_FLAG = 107 OR A.GL_FLAG = 29 OR A.GL_FLAG = 28 OR A.GL_FLAG = 204 OR A.GL_FLAG = 205 OR A.GL_FLAG = 108 OR A.GL_FLAG = 109 OR A.GL_FLAG = 110 OR A.GL_FLAG = 111 OR A.GL_FLAG = 113 OR A.GL_FLAG = 114 OR A.GL_FLAG = 112 OR A.GL_FLAG = 5552 OR A.GL_FLAG =5551 THEN 'Receipts'
 												WHEN A.GL_FLAG = 31 OR A.GL_FLAG = 32 OR A.GL_FLAG = 33 OR A.GL_FLAG = 34 THEN 'Partial Credit'
 												WHEN A.GL_FLAG = 37 OR A.GL_FLAG = 38 THEN 'Receive Order'
@@ -332,6 +332,7 @@ BEGIN
 																 When (A.GL_FLAG = 89)  then A.Amount
 																 When (A.GL_FLAG = 116) then A.Amount
 																 When (A.GL_FLAG = 117) then A.Amount
+																 When (A.GL_FLAG = 5553) then A.Amount
 															
 															END AS DEBIT                               ,
 															CASE
@@ -353,7 +354,8 @@ BEGIN
 																 When (A.GL_FLAG = 114) then A.Amount
 																 When (A.GL_FLAG = 5552) then A.Amount 																 
 																 When (A.GL_FLAG = 115) then A.Amount 
-																 When (A.GL_FLAG = 90)  then A.Amount 														
+																 When (A.GL_FLAG = 90)  then A.Amount
+																 When (A.GL_FLAG = 5554) then A.Amount
 															
 															END AS CREDIT                               ,
 															
