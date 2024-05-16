@@ -13,19 +13,19 @@ BEGIN
                     Declare AccountType decimal Default 0;
                     Declare AccountId decimal Default 0;
                     Declare AccountDescription Text Default '';
-					Declare BalanceTo decimal Default 0;
-					Declare TotalDebit decimal default 0;
-					Declare TotalCredit decimal default 0;
-					Declare DebitFrom decimal default 0;
-					Declare CreditFrom decimal default 0;
+		    Declare BalanceTo decimal Default 0;
+		    Declare TotalDebit decimal default 0;
+		    Declare TotalCredit decimal default 0;
+		    Declare DebitFrom decimal default 0;
+		    Declare CreditFrom decimal default 0;
                     
 					
                     select 
-                            ACC_ID					,
-							DESCRIPTION 
+                            ACC_ID,
+			    DESCRIPTION 
                     into
                             
-                            AccountId               ,
+                            AccountId,
                             AccountDescription 
                     from
                             accounts_id 
@@ -47,14 +47,14 @@ BEGIN
                                 accounts_id.id=P_ACCOUNT_ID;
 
 
-				    select 
+		    select 
                                 SUM(BALANCE),
-							    SUM(Debit),
-								SUM(Credit)
+				SUM(Debit),
+				SUM(Credit)
                     into 
                                 BalanceFrom,
-								DebitFrom,
-								CreditFrom								
+				DebitFrom,
+				CreditFrom								
                     from 
                                 Daily_Account_Balance 
                     where 
@@ -63,16 +63,16 @@ BEGIN
                                 Daily_Account_Balance.AccountId=P_ACCOUNT_ID;
                   
                     
-					select 
+		    select 
                                 SUM(DEBIT),
-								SUM(CREDIT)
+				SUM(CREDIT)
                     into 
                                 TotalDebit,
-								TotalCredit
+				TotalCredit
                     from 
                                 Daily_Account_Balance 
                     where 
-                                Daily_Account_Balance.ENTRYDATE<DATE(P_ENTRY_DATE_TO)
+                                Daily_Account_Balance.ENTRYDATE<=DATE(P_ENTRY_DATE_TO)
                     and 
                                 Daily_Account_Balance.AccountId=P_ACCOUNT_ID;
 					
@@ -105,12 +105,13 @@ BEGIN
 										A.Total_Debit,
 										A.Total_Credit,
 										IFNULL(A.BEG_BAL,0) as BEG_BAL,
-										A.TOTAL_ROWS
+										A.TOTAL_ROWS,
+										AccountType as AccountType
 										
-							from (
+								from (
 										SELECT 
                                           
-                                          A.id,
+                                          					  A.id,
 										  A.FORM_FLAG,
 										  A.ACC_ID,
 										  A.DESCRIPTION,
@@ -172,7 +173,7 @@ BEGIN
 																	WHEN (A.GL_FLAG = 59) THEN A.AMOUNT
 																	WHEN (A.GL_FLAG = 64) THEN A.AMOUNT
 															
-															END AS DEBIT                                ,
+															END AS DEBIT,
 														
 															CASE
 															
@@ -182,7 +183,7 @@ BEGIN
 																	when (A.GL_FLAG = 150) Then A.Amount
 																	When (A.GL_FLAG = 151) Then A.Amount
 															
-															END AS CREDIT                               ,
+															END AS CREDIT,
 																	A.GL_ACC_ID AS ACCOUNT_ID           ,
 																	AccountId AS ACC_ID                 ,
 																	AccountDescription AS DESCRIPTION   ,
@@ -212,7 +213,7 @@ BEGIN
 															CASE
 															
 																	WHEN P_ENTRY_DATE_TO <> "" 
-																	THEN FORM_DATE <=Date(P_ENTRY_DATE_TO)
+																	THEN FORM_DATE <=P_ENTRY_DATE_TO
 																	ELSE TRUE
 															
 															END
@@ -222,7 +223,7 @@ BEGIN
 															CASE 
 																
 																   When P_ENTRY_DATE_FROM <> ""
-																   Then FORM_DATE >=Date(P_ENTRY_DATE_FROM)
+																   Then FORM_DATE >=P_ENTRY_DATE_FROM
 																   Else TRUE 
 															  
 															END
@@ -246,7 +247,7 @@ BEGIN
 																	WHEN (A.GL_FLAG = 74) THEN A.AMOUNT 
 																	WHEN (A.GL_FLAG = 75) THEN A.AMOUNT
 															
-															END AS DEBIT  		                        ,
+															END AS DEBIT,
 														
 															CASE
 															
@@ -285,7 +286,7 @@ BEGIN
 															CASE
 													
 																	WHEN P_ENTRY_DATE_TO <> "" 
-																	THEN FORM_DATE <= Date(P_ENTRY_DATE_TO)
+																	THEN FORM_DATE <= P_ENTRY_DATE_TO
 																	ELSE TRUE
 															
 															END
@@ -294,7 +295,7 @@ BEGIN
 														    CASE 
 															
 																   When P_ENTRY_DATE_FROM <> ""
-																   Then FORM_DATE >= Date(P_ENTRY_DATE_FROM)
+																   Then FORM_DATE >= P_ENTRY_DATE_FROM
 																   Else TRUE 
 														  
 														    END
@@ -318,7 +319,7 @@ BEGIN
 																 When (A.GL_FLAG = 513) then A.Amount
 																 When (A.GL_FLAG = 19)  then A.Amount 
 																 When (A.GL_FLAG = 26)  then A.Amount 
-																 When (A.GL_FLAG = 201)  then A.Amount
+																 When (A.GL_FLAG = 201) then A.Amount
 																 When (A.GL_FLAG = 203) then A.Amount 
 																 When (A.GL_FLAG = 103) then A.Amount 
 																 When (A.GL_FLAG = 105) then A.Amount
@@ -387,7 +388,7 @@ BEGIN
 															CASE
 															
 																WHEN P_ENTRY_DATE_TO <> "" 
-																THEN FORM_DATE <=Date(P_ENTRY_DATE_TO)
+																THEN FORM_DATE <=P_ENTRY_DATE_TO
 																ELSE TRUE
 															
 															END
@@ -396,7 +397,7 @@ BEGIN
 															CASE 
 															
 																 When P_ENTRY_DATE_FROM <> ""
-																 Then FORM_DATE >=Date(P_ENTRY_DATE_FROM)
+																 Then FORM_DATE >=P_ENTRY_DATE_FROM
 																 Else TRUE 
 														  
 															END
@@ -451,7 +452,7 @@ BEGIN
 															  When (A.GL_FLAG = 87) then A.Amount 
 															  When (A.GL_FLAG = 85) then A.Amount 
 														  
-														  END AS CREDIT                             ,
+														  END AS CREDIT                                 ,
 															  A.GL_ACC_ID AS ACCOUNT_ID             ,
 															  AccountId AS ACC_ID                   ,
 															  AccountDescription AS DESCRIPTION     ,
@@ -479,7 +480,7 @@ BEGIN
 														  CASE
 															
 																WHEN P_ENTRY_DATE_TO <> "" 
-																THEN FORM_DATE <=Date(P_ENTRY_DATE_TO)
+																THEN FORM_DATE <=P_ENTRY_DATE_TO
 																ELSE TRUE
 														  
 														  END
@@ -487,7 +488,7 @@ BEGIN
 
 														  CASE 
 															   When P_ENTRY_DATE_FROM <> ""
-															   Then FORM_DATE >= Date(P_ENTRY_DATE_FROM)
+															   Then FORM_DATE >= P_ENTRY_DATE_FROM
 															   Else TRUE 
 														  END
 
@@ -548,7 +549,7 @@ BEGIN
 															CASE
 															
 																	WHEN P_ENTRY_DATE_TO <> "" 
-																	THEN FORM_DATE <= Date(P_ENTRY_DATE_TO)
+																	THEN FORM_DATE <= P_ENTRY_DATE_TO
 																	ELSE TRUE
 															
 															END
@@ -556,7 +557,7 @@ BEGIN
 													
 																CASE 
 																	   When P_ENTRY_DATE_FROM <> ""
-																	   Then FORM_DATE >= Date(P_ENTRY_DATE_FROM)
+																	   Then FORM_DATE >= P_ENTRY_DATE_FROM
 																	   Else TRUE 
 																END
 
@@ -591,18 +592,18 @@ BEGIN
 																	 When (A.GL_FLAG = 70) then A.Amount 
 																	 When (A.GL_FLAG = 72) then A.Amount  
 																
-																END AS CREDIT								,
+																END AS CREDIT,
 																	 
-																	 A.GL_ACC_ID AS ACCOUNT_ID				,
-																	 AccountId AS ACC_ID					,
-																	 AccountDescription AS DESCRIPTION		,
-																	 AccountType AS ACCOUNT_TYPE_ID			,
-																	 A.GL_FLAG								,
-																	 A.FORM_DATE							,
-																	 A.FORM_REFERENCE						,
-																	 A.FORM_ID AS FORM_ID					,
-																	 A.FORM_FLAG							,
-																	 A.ID									,
+																	 A.GL_ACC_ID AS ACCOUNT_ID,
+																	 AccountId AS ACC_ID,
+																	 AccountDescription AS DESCRIPTION,
+																	 AccountType AS ACCOUNT_TYPE_ID	,
+																	 A.GL_FLAG,
+																	 A.FORM_DATE,
+																	 A.FORM_REFERENCE,
+																	 A.FORM_ID AS FORM_ID,
+																	 A.FORM_FLAG,
+																	 A.ID,
 																	 A.Form_Detail_Id AS DETAIL_ID 			
 													FROM
 													
@@ -622,7 +623,7 @@ BEGIN
 																CASE
 													
 																		WHEN P_ENTRY_DATE_TO <> ""
-																		THEN FORM_DATE <= Date(P_ENTRY_DATE_TO)
+																		THEN FORM_DATE <= P_ENTRY_DATE_TO
 																		ELSE TRUE
 																
 																END
@@ -630,7 +631,7 @@ BEGIN
 													
 																CASE 
 																	   When P_ENTRY_DATE_FROM <> ""
-																	   Then FORM_DATE >= Date(P_ENTRY_DATE_FROM)
+																	   Then FORM_DATE >= P_ENTRY_DATE_FROM
 																	   Else TRUE 
 																END
 
@@ -646,15 +647,15 @@ BEGIN
 															IFNULL(DebitFrom,0) as Debit,
 															IFNULL(CreditFrom,0) as Credit,
 															P_ACCOUNT_ID as ACCOUNT_ID,
-															AccountId AS ACC_ID						,
-															AccountDescription AS DESCRIPTION		,
-															AccountType AS ACCOUNT_TYPE_ID			,
-															'00'  as GL_FLAG 						,
-															'0000-00-00' as FORM_DATE				,
-															'Beginning Balance' as Form_Reference   ,
-															'0'     as FORM_ID 						,
-															'BEG_BAL' as FORM_FLAG 					,
-															'-1'      as ID                         ,
+															AccountId AS ACC_ID,
+															AccountDescription AS DESCRIPTION,
+															AccountType AS ACCOUNT_TYPE_ID,
+															'00'  as GL_FLAG ,
+															'0000-00-00' as FORM_DATE,
+															'Beginning Balance' as Form_Reference,
+															'0'     as FORM_ID,
+															'BEG_BAL' as FORM_FLAG,
+															'-1'      as ID,
 															'-1'      as Detail_Id
                                                         
 													
