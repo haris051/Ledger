@@ -96,7 +96,7 @@ BEGIN
 									    then 
 											IFNULL(A.BALANCE,0)
 									    else	
-											SUM(A.Balance) OVER(Order by ISNULL(A.FORM_DATE),A.FORM_DATE asc,A.FORM_ID asc,A.FORM_FLAG asc,A.Detail_ID asc,A.FORM_FLAG asc)
+											SUM(A.Balance) OVER(Order by ISNULL(A.FORM_DATE),A.FORM_DATE asc,A.FORM_ID asc,A.FORM_FLAG asc,A.Detail_ID asc,A.FORM_FLAG asc,A.GL_FLAG)
 										END
 										as BALANCE,
 										A.GL_FLAG,
@@ -660,7 +660,7 @@ BEGIN
 															'-1'      as Detail_Id
                                                         
 													
-											)A Order by A.FORM_DATE asc,A.FORM_ID asc,A.FORM_FLAG asc,A.Detail_ID asc,A.FORM_FLAG asc 
+											)A Order by A.FORM_DATE asc,A.FORM_ID asc,A.FORM_FLAG asc,A.Detail_ID asc,A.FORM_FLAG asc,A.GL_FLAG 
 									
 										) A
 										group BY
@@ -678,7 +678,7 @@ BEGIN
 										with ROLLUP 
 										having A.id is null OR A.FORM_ID is not null
 									)A
-                                    Order by ISNULL(A.FORM_DATE),A.FORM_DATE asc,A.FORM_ID asc,A.FORM_FLAG asc,A.Detail_ID asc,A.FORM_FLAG asc
+                                    						Order by ISNULL(A.FORM_DATE),A.FORM_DATE asc,A.FORM_ID asc,A.FORM_FLAG asc,A.Detail_ID asc,A.FORM_FLAG asc,A.GL_FLAG
 									Limit P_START,P_LENGTH;
 										
     
