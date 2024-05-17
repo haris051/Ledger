@@ -140,13 +140,9 @@ BEGIN
 												ELSE ''''
 											
 										  END AS FORM_TYPE,
-										  case 
-										  
-												when IFNULL(A.DEBIT, 0)<0 then IFNULL(A.DEBIT, 0)*-1 else IFNULL(A.DEBIT,0) end AS DEBIT,
-												
-										  case 
-										  
-												when IFNULL(A.CREDIT, 0)<0 then IFNULL(A.CREDIT, 0)*-1 else IFNULL(A.CREDIT,0) end AS CREDIT,
+
+												IFNULL(A.DEBIT,0) AS DEBIT,
+												IFNULL(A.CREDIT,0) AS CREDIT,
 										  CASE
 												WHEN AccountType = 3 OR AccountType = 2 OR AccountType = 5 THEN SUM(IFNULL(A.DEBIT, 0)-IFNULL(A.CREDIT, 0))
 												ELSE SUM(IFNULL(A.CREDIT, 0)-IFNULL(A.DEBIT, 0)) 			
@@ -162,10 +158,7 @@ BEGIN
 									 FROM 
 										(
 								
-										 select 
-												*
-										 From 
-											(
+										 
 													SELECT 
 															
 															CASE
@@ -642,7 +635,7 @@ BEGIN
 													    
 														-- ADJUSTMENT Accounting--
                                                         
-                                                       UNION ALL 
+                                                       							 UNION ALL 
 													   
 													 Select 
 															IFNULL(DebitFrom,0) as Debit,
@@ -660,7 +653,7 @@ BEGIN
 															'-1'      as Detail_Id
                                                         
 													
-											)A Order by A.FORM_DATE asc,A.FORM_ID asc,A.FORM_FLAG asc,A.Detail_ID asc,A.FORM_FLAG asc,A.GL_FLAG 
+											 
 									
 										) A
 										group BY
