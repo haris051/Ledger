@@ -141,8 +141,8 @@ BEGIN
 											
 										  END AS FORM_TYPE,
 
-												IFNULL(A.DEBIT,0) AS DEBIT,
-												IFNULL(A.CREDIT,0) AS CREDIT,
+												SUM(IFNULL(A.DEBIT,0)) AS DEBIT,
+												SUM(IFNULL(A.CREDIT,0)) AS CREDIT,
 										  CASE
 												WHEN AccountType = 3 OR AccountType = 2 OR AccountType = 5 THEN SUM(IFNULL(A.DEBIT, 0)-IFNULL(A.CREDIT, 0))
 												ELSE SUM(IFNULL(A.CREDIT, 0)-IFNULL(A.DEBIT, 0)) 			
@@ -663,8 +663,6 @@ BEGIN
 										A.DESCRIPTION,
 										A.FORM_DATE,
 										A.FORM_REFERENCE,
-										A.DEBIT,
-										A.CREDIT,
 										A.GL_FLAG,
 										A.Detail_id,
 										A.FORM_ID
