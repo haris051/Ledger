@@ -9,15 +9,15 @@ CREATE PROCEDURE `PROC_GENERAL_LEDGER`( P_ACCOUNT_ID INT,
 										P_YEAR TEXT )
 BEGIN
 
-                    DECLARE BalanceFrom DECIMAL Default 0;
+                    DECLARE BalanceFrom DECIMAL(22,2) Default 0;
                     Declare AccountType decimal Default 0;
                     Declare AccountId decimal Default 0;
                     Declare AccountDescription Text Default '';
-		    Declare BalanceTo decimal Default 0;
-		    Declare TotalDebit decimal default 0;
-		    Declare TotalCredit decimal default 0;
-		    Declare DebitFrom decimal default 0;
-		    Declare CreditFrom decimal default 0;
+		    Declare BalanceTo decimal(22,2) Default 0;
+		    Declare TotalDebit decimal(22,2) default 0;
+		    Declare TotalCredit decimal(22,2) default 0;
+		    Declare DebitFrom decimal(22,2) default 0;
+		    Declare CreditFrom decimal(22,2) default 0;
                     
 					
                     select 
