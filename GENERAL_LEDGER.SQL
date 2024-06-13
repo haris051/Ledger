@@ -106,7 +106,9 @@ BEGIN
 										A.Total_Credit,
 										IFNULL(A.BEG_BAL,0) as BEG_BAL,
 										A.TOTAL_ROWS,
-										AccountType as AccountType
+										AccountType as AccountType,
+										IFNULL(DebitFrom,0) as DebitFrom,
+                                        					IFNULL(CreditFrom,0) as CreditFrom
 										
 								from (
 										SELECT 
@@ -141,11 +143,11 @@ BEGIN
 											
 										  END AS FORM_TYPE,
 
-												SUM(IFNULL(A.DEBIT,0)) AS DEBIT,
-												SUM(IFNULL(A.CREDIT,0)) AS CREDIT,
+												SUM(A.DEBIT) AS DEBIT,
+											        SUM(A.CREDIT)  AS CREDIT,
 										  CASE
-												WHEN AccountType = 3 OR AccountType = 2 OR AccountType = 5 THEN SUM(IFNULL(A.DEBIT, 0)-IFNULL(A.CREDIT, 0))
-												ELSE SUM(IFNULL(A.CREDIT, 0)-IFNULL(A.DEBIT, 0)) 			
+												WHEN (AccountType = 3 OR AccountType = 2 OR AccountType = 5) then SUM(IFNULL(A.DEBIT, 0)-IFNULL(A.CREDIT, 0)) 
+											        when (AccountType = 1 OR AccountType = 4 OR AccountType = 6) then SUM(IFNULL(A.CREDIT, 0)-IFNULL(A.DEBIT, 0)) 			
 										  END AS BALANCE,
 										  A.GL_FLAG,
 										  A.DETAIL_ID,
