@@ -13,16 +13,16 @@ BEGIN
                     Declare AccountType decimal Default 0;
                     Declare AccountId decimal Default 0;
                     Declare AccountDescription Text Default '';
-		    Declare BalanceTo decimal(22,2) Default 0;
-		    Declare TotalDebit decimal(22,2) default 0;
-		    Declare TotalCredit decimal(22,2) default 0;
-		    Declare DebitFrom decimal(22,2) default 0;
-		    Declare CreditFrom decimal(22,2) default 0;
+					Declare BalanceTo decimal(22,2) Default 0;
+					Declare TotalDebit decimal(22,2) default 0;
+					Declare TotalCredit decimal(22,2) default 0;
+					Declare DebitFrom decimal(22,2) default 0;
+					Declare CreditFrom decimal(22,2) default 0;
                     
 					
                     select 
                             ACC_ID,
-			    DESCRIPTION 
+							DESCRIPTION 
                     into
                             
                             AccountId,
@@ -47,14 +47,14 @@ BEGIN
                                 accounts_id.id=P_ACCOUNT_ID;
 
 
-		    select 
+					select 
                                 SUM(BALANCE),
-				SUM(Debit),
-				SUM(Credit)
+								SUM(Debit),
+								SUM(Credit)
                     into 
                                 BalanceFrom,
-				DebitFrom,
-				CreditFrom								
+								DebitFrom,
+								CreditFrom								
                     from 
                                 Daily_Account_Balance 
                     where 
@@ -63,12 +63,12 @@ BEGIN
                                 Daily_Account_Balance.AccountId=P_ACCOUNT_ID;
                   
                     
-		    select 
+					select 
                                 SUM(DEBIT),
-				SUM(CREDIT)
+								SUM(CREDIT)
                     into 
                                 TotalDebit,
-				TotalCredit
+								TotalCredit
                     from 
                                 Daily_Account_Balance 
                     where 
@@ -108,12 +108,13 @@ BEGIN
 										A.TOTAL_ROWS,
 										AccountType as AccountType,
 										IFNULL(DebitFrom,0) as DebitFrom,
-                                        					IFNULL(CreditFrom,0) as CreditFrom
+                                        IFNULL(CreditFrom,0) as CreditFrom,
+										Customer_Vendor_Name
 										
 								from (
 										SELECT 
                                           
-                                          					  A.id,
+                                          A.id,
 										  A.FORM_FLAG,
 										  A.ACC_ID,
 										  A.DESCRIPTION,
@@ -144,18 +145,19 @@ BEGIN
 										  END AS FORM_TYPE,
 
 												SUM(A.DEBIT) AS DEBIT,
-											        SUM(A.CREDIT)  AS CREDIT,
+											    SUM(A.CREDIT)  AS CREDIT,
 										  CASE
 												WHEN (AccountType = 3 OR AccountType = 2 OR AccountType = 5) then SUM(IFNULL(A.DEBIT, 0)-IFNULL(A.CREDIT, 0)) 
-											        when (AccountType = 1 OR AccountType = 4 OR AccountType = 6) then SUM(IFNULL(A.CREDIT, 0)-IFNULL(A.DEBIT, 0)) 			
+											    when (AccountType = 1 OR AccountType = 4 OR AccountType = 6) then SUM(IFNULL(A.CREDIT, 0)-IFNULL(A.DEBIT, 0)) 			
 										  END AS BALANCE,
 										  A.GL_FLAG,
 										  A.DETAIL_ID,
 										  A.FORM_ID,
 										  IFNULL(TotalDebit,0) as Total_Debit,
 										  IFNULL(TotalCredit,0) as Total_Credit,
-										  IFNULL(BalanceFrom,0) as BEG_BAL,
-										  COUNT(*) OVER() as TOTAL_ROWS
+										  IFNULL(BalanceFrom,0) as BEG_BAL, 
+										  COUNT(*) OVER() as TOTAL_ROWS,
+										  Customer_Vendor_Name
 										  
 									 FROM 
 										(
@@ -190,16 +192,30 @@ BEGIN
 																	A.Form_Id AS FORM_ID                ,
 																	A.FORM_FLAG                         ,
 																	A.ID                                ,
-																	A.Form_Detail_Id AS DETAIL_ID 		
+																	A.Form_Detail_Id AS DETAIL_ID 		,
+																	case 
+																	      when A.FORM_FLAG = 'StockTransfer' then B.ST_COMPANY_TO_NAME
+																	      when A.FORM_FLAG = 'StockIn' then C.SN_Company_From_Name
+																	END as Customer_Vendor_Name 
 													FROM 
 																
 															Stock_Accounting A
 													
+													Left Join
+													
+																Stock_Transfer B 
+													ON     		(A.FORM_ID = B.id and A.FORM_FLAG ='StockTransfer')
+													
+													LEFT join 
+																Stock_IN C 
+													ON 			(A.FORM_ID = C.id and A.FORM_FLAG = 'StockIn')
+													
 													WHERE 
+													(
 															CASE
 															
 																	WHEN P_COMPANY_ID <> "" 
-																	THEN COMPANY_ID =P_COMPANY_ID
+																	THEN A.COMPANY_ID =P_COMPANY_ID
 																	ELSE TRUE
 															
 															END
@@ -209,7 +225,7 @@ BEGIN
 															CASE
 															
 																	WHEN P_ENTRY_DATE_TO <> "" 
-																	THEN FORM_DATE <=P_ENTRY_DATE_TO
+																	THEN A.FORM_DATE <=P_ENTRY_DATE_TO
 																	ELSE TRUE
 															
 															END
@@ -219,15 +235,14 @@ BEGIN
 															CASE 
 																
 																   When P_ENTRY_DATE_FROM <> ""
-																   Then FORM_DATE >=P_ENTRY_DATE_FROM
+																   Then A.FORM_DATE >=P_ENTRY_DATE_FROM
 																   Else TRUE 
 															  
 															END
 													AND
 													
-																GL_ACC_ID= P_ACCOUNT_ID		
-
-													 
+																A.GL_ACC_ID= P_ACCOUNT_ID	
+													)
 													
 													-- Stock Accounting --
 
@@ -264,15 +279,23 @@ BEGIN
 															A.Form_Id AS FORM_ID                        ,
 															A.FORM_FLAG                                 ,
 															A.ID                                        ,
-															A.Form_Detail_Id AS DETAIL_ID               
+															A.Form_Detail_Id AS DETAIL_ID               ,
+															case 
+																	when A.FORM_FLAG = 'RepairOut' 
+																	then B.RE_REPAIR_COMPANY_NAME 
+															end as Customer_Vendor_Name
 													FROM
 															Repair_Accounting A
-														
+												    Left join 
+															Repair_Out B  
+													ON 
+															(A.Form_ID = B.id and A.FORM_FLAG = 'RepairOut')
+															
 													WHERE 
 															CASE
 																	
 																	WHEN P_COMPANY_ID <> "" 
-																	THEN COMPANY_ID = P_COMPANY_ID
+																	THEN A.COMPANY_ID = P_COMPANY_ID
 																	ELSE TRUE
 															
 															END
@@ -282,7 +305,7 @@ BEGIN
 															CASE
 													
 																	WHEN P_ENTRY_DATE_TO <> "" 
-																	THEN FORM_DATE <= P_ENTRY_DATE_TO
+																	THEN A.FORM_DATE <= P_ENTRY_DATE_TO
 																	ELSE TRUE
 															
 															END
@@ -291,13 +314,15 @@ BEGIN
 														    CASE 
 															
 																   When P_ENTRY_DATE_FROM <> ""
-																   Then FORM_DATE >= P_ENTRY_DATE_FROM
+																   Then A.FORM_DATE >= P_ENTRY_DATE_FROM
 																   Else TRUE 
 														  
 														    END
 													AND
 													
-															GL_ACC_ID=P_ACCOUNT_ID	
+															A.GL_ACC_ID=P_ACCOUNT_ID
+
+													
 														  
 														-- Repair Accounting -- 								  
 
@@ -366,15 +391,46 @@ BEGIN
 															A.Form_Id AS FORM_ID                        ,
 															A.FORM_FLAG                                 ,
 															A.ID                                        ,
-															A.Form_Detail_Id AS DETAIL_ID               
+															A.Form_Detail_Id AS DETAIL_ID               ,
+															case 
+																 when A.FORM_FLAG = 'PaymentSent' and B.IS_VENDOR = 'Y' then B.PS_VENDOR_NAME 
+																 when A.FORM_FLAG = 'PaymentSent' and B.IS_VENDOR = 'N' then B.PS_CUSTOMER_NAME
+																 when A.FORM_FLAG = 'PaymentSent' and B.IS_VENDOR = 'R' then B.PS_REP_COM_NAME
+																 when A.FORM_FLAG = 'ReceiveMoney' and C.IS_VENDOR = 'Y' then C.RM_VENDOR_NAME
+																 when A.FORM_FLAG = 'ReceiveMoney' and C.IS_VENDOR = 'N' then C.RM_CUSTOMER_NAME
+																 when A.Form_Flag = 'Payments' then D.PAY_VENDOR_NAME
+																 when A.FORM_FLAG = 'Receipts' then E.REC_CUSTOMER_NAME
+																 when A.FORM_FLAG = 'Charges' then F.C_REP_COM_NAME
+															END 
+																 as Customer_Vendor_Name	
 													FROM
 															Payments_Accounting A
+															
+													LEFT JOIN 
+															Payment_Sent B 
+													ON      (A.FORM_ID = B.id and A.FORM_FLAG = 'PaymentSent')
 													
+													LEFT JOIN 
+															 Receive_Money C 
+													ON      (A.FORM_ID = C.id and A.FORM_FLAG = 'ReceiveMoney')
+													LEFT Join 
+															Payments D 
+													ON      (A.FORM_ID = D.id and A.FORM_FLAG = 'Payments')
+													LEFT Join 
+															Receipts E 
+													ON 		(A.FORM_ID = E.id and A.FORM_FLAG = 'Receipts')
+													LEFT Join 
+															Charges F 
+													ON      (A.FORM_ID = F.id and A.FORM_FLAG = 'Charges')
+													
+															
 													WHERE
+													
+													(
 															CASE
 													
 																WHEN P_COMPANY_ID <> "" 
-																THEN COMPANY_ID = P_COMPANY_ID
+																THEN A.COMPANY_ID = P_COMPANY_ID
 																ELSE TRUE
 															
 															END
@@ -384,7 +440,7 @@ BEGIN
 															CASE
 															
 																WHEN P_ENTRY_DATE_TO <> "" 
-																THEN FORM_DATE <=P_ENTRY_DATE_TO
+																THEN A.FORM_DATE <=P_ENTRY_DATE_TO
 																ELSE TRUE
 															
 															END
@@ -393,7 +449,7 @@ BEGIN
 															CASE 
 															
 																 When P_ENTRY_DATE_FROM <> ""
-																 Then FORM_DATE >=P_ENTRY_DATE_FROM
+																 Then A.FORM_DATE >=P_ENTRY_DATE_FROM
 																 Else TRUE 
 														  
 															END
@@ -401,8 +457,10 @@ BEGIN
 													AND		
 													
 													
-													GL_ACC_ID=P_ACCOUNT_ID														
-															  
+													A.GL_ACC_ID=P_ACCOUNT_ID
+													)
+													
+													
 														-- Payments Accounting --											
 
 
@@ -459,15 +517,29 @@ BEGIN
 															  A.FORM_ID AS FORM_ID                  ,
 															  A.FORM_FLAG                           ,
 															  A.ID                                  ,
-															  A.Form_Detail_Id AS DETAIL_ID         
+															  A.Form_Detail_Id AS DETAIL_ID         ,
+															  case 
+																	when A.FORM_FLAG = 'Saleinvoice' then B.SI_CUSTOMER_NAME
+																	when A.FORM_FLAG = 'Salereturn' then C.SR_CUSTOMER_NAME
+																	when A.FORM_FLAG = 'Replacement' then D.REP_CUSTOMER_NAME
+															  END as Customer_Vendor_Name
+													          
+													FROM          
+																Sales_Accounting A
+													LEFT JOIN	Sale_Invoice B 
+													ON 			(A.FORM_ID = B.Id and A.FORM_FLAG = 'Saleinvoice')
+													LEFT JOIN   Sale_Return C 
+													ON          (A.FORM_ID = C.ID and A.FORM_FLAG = 'Salereturn')
+													LEFT JOIN   REPLACEMENT D 
+													ON          (A.FORM_ID = D.ID and A.FORM_FLAG = 'Replacement')
 													
-													FROM 
-														  Sales_Accounting A
 													WHERE
+													
+													(
 															CASE
 																
 																WHEN P_COMPANY_ID <> ""
-																THEN COMPANY_ID =P_COMPANY_ID
+																THEN A.COMPANY_ID =P_COMPANY_ID
 																ELSE TRUE
 														  
 															END
@@ -476,7 +548,7 @@ BEGIN
 														  CASE
 															
 																WHEN P_ENTRY_DATE_TO <> "" 
-																THEN FORM_DATE <=P_ENTRY_DATE_TO
+																THEN A.FORM_DATE <=P_ENTRY_DATE_TO
 																ELSE TRUE
 														  
 														  END
@@ -484,14 +556,16 @@ BEGIN
 
 														  CASE 
 															   When P_ENTRY_DATE_FROM <> ""
-															   Then FORM_DATE >= P_ENTRY_DATE_FROM
+															   Then A.FORM_DATE >= P_ENTRY_DATE_FROM
 															   Else TRUE 
 														  END
 
 													AND		
 													
-														GL_ACC_ID=P_ACCOUNT_ID
-														
+														A.GL_ACC_ID=P_ACCOUNT_ID
+													)
+                                                       													
+													
 															-- Sales Accounting --
 
 															 UNION ALL
@@ -529,14 +603,35 @@ BEGIN
 																	A.FORM_ID AS FORM_ID,
 																	A.FORM_FLAG,
 																	A.ID,
-																	A.Form_Detail_Id AS DETAIL_ID 
-																			
+																	A.Form_Detail_Id AS DETAIL_ID,
+																	case 
+																		when A.FORM_FLAG = 'VendorCreditMemo' then B.VCM_VENDOR_NAME
+																		when A.FORM_FLAG = 'PartialCredit' and C.Vendor_Id is not null then E.Vendor_Name
+																		when A.FORM_FLAG = 'PartialCredit' and C.Customer_Id is not null then F.Customer_Name 
+																		when A.FORM_FLAG = 'ReceiveOrder' then D.RO_VENDOR_NAME
+																	END as Customer_Vendor_Name 
 													FROM 
 																	Purchase_Accounting A
+													LEFT JOIN       Vendor_Credit_Memo B 
+													ON              (A.FORM_ID = B.id and A.FORM_FLAG = 'VendorCreditMemo')
+													LEFT JOIN       (
+																		Partial_Credit C 
+																		LEFT join       Vendor E 
+																		ON              E.id = C.Vendor_ID 
+																		LEFT join 		Customer F 
+																		ON              F.id = C.Customer_Id  	
+																	)	
+													ON              (A.FORM_ID = C.id and A.FORM_FLAG = 'PartialCredit')	
+													LEFT JOIN 		Receive_Order D 
+													ON              (A.FORM_ID = D.id and A.FORM_FLAG = 'ReceiveOrder')
+													
+															
 													WHERE
+													
+													(
 															CASE
 													
-																	WHEN P_COMPANY_ID <> "" THEN COMPANY_ID = P_COMPANY_ID
+																	WHEN P_COMPANY_ID <> "" THEN A.COMPANY_ID = P_COMPANY_ID
 																	ELSE TRUE
 															END
 													
@@ -545,22 +640,23 @@ BEGIN
 															CASE
 															
 																	WHEN P_ENTRY_DATE_TO <> "" 
-																	THEN FORM_DATE <= P_ENTRY_DATE_TO
+																	THEN A.FORM_DATE <= P_ENTRY_DATE_TO
 																	ELSE TRUE
 															
 															END
 													And 
 													
-																CASE 
-																	   When P_ENTRY_DATE_FROM <> ""
-																	   Then FORM_DATE >= P_ENTRY_DATE_FROM
-																	   Else TRUE 
-																END
+															CASE 
+															 	    When P_ENTRY_DATE_FROM <> ""
+																    Then A.FORM_DATE >= P_ENTRY_DATE_FROM
+																    Else TRUE 
+															END
 
 													AND
 													
-														GL_ACC_ID=P_ACCOUNT_ID																		 
-																		   
+														A.GL_ACC_ID=P_ACCOUNT_ID	
+                                                    ) 
+																											
 															-- Purchase Accounting --											
 
 
@@ -600,7 +696,8 @@ BEGIN
 																	 A.FORM_ID AS FORM_ID,
 																	 A.FORM_FLAG,
 																	 A.ID,
-																	 A.Form_Detail_Id AS DETAIL_ID 			
+																	 A.Form_Detail_Id AS DETAIL_ID,
+																	 '' as Customer_Vendor_Name
 													FROM
 													
 																	Adjustment_Accounting  A
@@ -652,7 +749,8 @@ BEGIN
 															'0'     as FORM_ID,
 															'BEG_BAL' as FORM_FLAG,
 															'-1'      as ID,
-															'-1'      as Detail_Id
+															'-1'      as Detail_Id,
+															''        as Customer_Vendor_Name
                                                         
 													
 											 
