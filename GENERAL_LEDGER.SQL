@@ -606,23 +606,16 @@ BEGIN
 																	A.Form_Detail_Id AS DETAIL_ID,
 																	case 
 																		when A.FORM_FLAG = 'VendorCreditMemo' then B.VCM_VENDOR_NAME
-																		when A.FORM_FLAG = 'PartialCredit' and C.Vendor_Id is not null then E.Vendor_Name
-																		when A.FORM_FLAG = 'PartialCredit' and C.Customer_Id is not null then F.Customer_Name 
+																		when A.FORM_FLAG = 'PartialCredit'  then C.PC_PERSON_NAME
 																		when A.FORM_FLAG = 'ReceiveOrder' then D.RO_VENDOR_NAME
 																	END as Customer_Vendor_Name 
 													FROM 
 																	Purchase_Accounting A
 													LEFT JOIN       Vendor_Credit_Memo B 
 													ON              (A.FORM_ID = B.id and A.FORM_FLAG = 'VendorCreditMemo')
-													LEFT JOIN       (
-																		Partial_Credit C 
-																		LEFT join       Vendor E 
-																		ON              E.id = C.Vendor_ID 
-																		LEFT join 		Customer F 
-																		ON              F.id = C.Customer_Id  	
-																	)	
+													LEFT JOIN       Partial_Credit C 			
 													ON              (A.FORM_ID = C.id and A.FORM_FLAG = 'PartialCredit')	
-													LEFT JOIN 		Receive_Order D 
+													LEFT JOIN 	Receive_Order D 
 													ON              (A.FORM_ID = D.id and A.FORM_FLAG = 'ReceiveOrder')
 													
 															
