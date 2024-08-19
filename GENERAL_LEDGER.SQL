@@ -89,12 +89,12 @@ BEGIN
 										A.FORM_DATE,
 										A.FORM_REFERENCE,
 										A.FORM_TYPE,
-										A.DEBIT,
-										A.CREDIT,
+										Round(A.DEBIT,2),
+										Round(A.CREDIT,2),
 										case 
 											when A.id is null 
 									    then 
-											IFNULL(A.BALANCE,0)
+											Round(IFNULL(A.BALANCE,0),2)
 									    else	
 											SUM(A.Balance) OVER(Order by ISNULL(A.FORM_DATE),A.FORM_DATE asc,A.FORM_ID asc,A.FORM_FLAG asc,A.Detail_ID asc,A.FORM_FLAG asc,A.GL_FLAG)
 										END
@@ -102,13 +102,13 @@ BEGIN
 										A.GL_FLAG,
 										A.DETAIL_ID,
 										A.FORM_ID,
-										A.Total_Debit,
-										A.Total_Credit,
-										IFNULL(A.BEG_BAL,0) as BEG_BAL,
+										Round(A.Total_Debit,2),
+										Round(A.Total_Credit,2),
+										Round(IFNULL(A.BEG_BAL,0),2) as BEG_BAL,
 										A.TOTAL_ROWS,
 										AccountType as AccountType,
-										IFNULL(DebitFrom,0) as DebitFrom,
-                                        IFNULL(CreditFrom,0) as CreditFrom,
+										Round(IFNULL(DebitFrom,0),2) as DebitFrom,
+                                        Round(IFNULL(CreditFrom,0),2) as CreditFrom,
 										Customer_Vendor_Name
 										
 								from (
@@ -606,16 +606,16 @@ BEGIN
 																	A.Form_Detail_Id AS DETAIL_ID,
 																	case 
 																		when A.FORM_FLAG = 'VendorCreditMemo' then B.VCM_VENDOR_NAME
-																		when A.FORM_FLAG = 'PartialCredit'  then C.PC_PERSON_NAME
+																		when A.FORM_FLAG = 'PartialCredit' then C.PC_PERSON_NAME
 																		when A.FORM_FLAG = 'ReceiveOrder' then D.RO_VENDOR_NAME
 																	END as Customer_Vendor_Name 
 													FROM 
 																	Purchase_Accounting A
 													LEFT JOIN       Vendor_Credit_Memo B 
 													ON              (A.FORM_ID = B.id and A.FORM_FLAG = 'VendorCreditMemo')
-													LEFT JOIN       Partial_Credit C 			
+													LEFT JOIN       Partial_Credit C 	
 													ON              (A.FORM_ID = C.id and A.FORM_FLAG = 'PartialCredit')	
-													LEFT JOIN 	Receive_Order D 
+													LEFT JOIN 		Receive_Order D 
 													ON              (A.FORM_ID = D.id and A.FORM_FLAG = 'ReceiveOrder')
 													
 															
@@ -768,5 +768,3 @@ BEGIN
     
 END $$
 DELIMITER ;
-
-
