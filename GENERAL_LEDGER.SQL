@@ -9,7 +9,7 @@ CREATE PROCEDURE `PROC_GENERAL_LEDGER`( P_ACCOUNT_ID INT,
 										P_YEAR TEXT )
 BEGIN
 
-                    DECLARE BalanceFrom DECIMAL(22,2) Default 0;
+                   DECLARE BalanceFrom DECIMAL(22,2) Default 0;
                     Declare AccountType decimal Default 0;
                     Declare AccountId decimal Default 0;
                     Declare AccountDescription Text Default '';
@@ -89,8 +89,8 @@ BEGIN
 										A.FORM_DATE,
 										A.FORM_REFERENCE,
 										A.FORM_TYPE,
-										Round(A.DEBIT,2),
-										Round(A.CREDIT,2),
+										Round(A.DEBIT,2) as DEBIT,
+										Round(A.CREDIT,2) as CREDIT,
 										case 
 											when A.id is null 
 									    then 
@@ -102,8 +102,8 @@ BEGIN
 										A.GL_FLAG,
 										A.DETAIL_ID,
 										A.FORM_ID,
-										Round(A.Total_Debit,2),
-										Round(A.Total_Credit,2),
+										Round(A.Total_Debit,2) as Total_Debit,
+										Round(A.Total_Credit,2) as Total_Credit,
 										Round(IFNULL(A.BEG_BAL,0),2) as BEG_BAL,
 										A.TOTAL_ROWS,
 										AccountType as AccountType,
