@@ -9,13 +9,14 @@ CREATE PROCEDURE `PROC_GENERAL_LEDGER`( P_ACCOUNT_ID INT,
 										P_YEAR TEXT )
 BEGIN
 
-                   DECLARE BalanceFrom DECIMAL(22,2) Default 0;
+                    DECLARE BalanceFrom DECIMAL(22,2) Default 0;
                     Declare AccountType decimal Default 0;
                     Declare AccountId decimal Default 0;
                     Declare AccountDescription Text Default '';
 					Declare BalanceTo decimal(22,2) Default 0;
 					Declare TotalDebit decimal(22,2) default 0;
 					Declare TotalCredit decimal(22,2) default 0;
+					Declare TotalBalance decimal(22,2) default 0;
 					Declare DebitFrom decimal(22,2) default 0;
 					Declare CreditFrom decimal(22,2) default 0;
                     
@@ -48,9 +49,9 @@ BEGIN
 
 
 					select 
-                                SUM(BALANCE),
-								SUM(Debit),
-								SUM(Credit)
+                                Round(cast(IFNULL(SUM(BALANCE),0) as decimal(22,2)),2),
+								Round(cast(IFNULL(SUM(Debit),0) as decimal(22,2)),2),
+								Round(cast(IFNULL(SUM(Credit),0) as Decimal(22,2)),2)
                     into 
                                 BalanceFrom,
 								DebitFrom,
@@ -64,11 +65,13 @@ BEGIN
                   
                     
 					select 
-                                SUM(DEBIT),
-								SUM(CREDIT)
+                                Round(cast(IFNULL(SUM(DEBIT),0) as Decimal(22,2)),2),
+								Round(cast(IFNULL(SUM(CREDIT),0) as Decimal(22,2)),2),
+								Round(cast(IFNULL(SUM(Balance),0) as Decimal(22,2)),2)
                     into 
                                 TotalDebit,
-								TotalCredit
+								TotalCredit,
+								TotalBalance
                     from 
                                 Daily_Account_Balance 
                     where 
@@ -77,7 +80,9 @@ BEGIN
                                 Daily_Account_Balance.AccountId=P_ACCOUNT_ID;
 					
 					
-					
+							     							  
+													   
+								
 								
 					
 								select 		
@@ -89,31 +94,48 @@ BEGIN
 										A.FORM_DATE,
 										A.FORM_REFERENCE,
 										A.FORM_TYPE,
-										Round(A.DEBIT,2) as DEBIT,
-										Round(A.CREDIT,2) as CREDIT,
-										case 
-											when A.id is null 
-									    then 
-											Round(IFNULL(A.BALANCE,0),2)
-									    else	
-											SUM(A.Balance) OVER(Order by ISNULL(A.FORM_DATE),A.FORM_DATE asc,A.FORM_ID asc,A.FORM_FLAG asc,A.Detail_ID asc,A.FORM_FLAG asc,A.GL_FLAG)
-										END
-										as BALANCE,
+										Round(cast(A.DEBIT as Decimal(22,2)),2) as DEBIT,
+										Round(cast(A.CREDIT as Decimal(22,2)),2) as CREDIT,
+										Round(cast(IFNULL(A.BALANCE,0) as Decimal(22,2)),2) as BALANCE,
 										A.GL_FLAG,
 										A.DETAIL_ID,
 										A.FORM_ID,
-										Round(A.Total_Debit,2) as Total_Debit,
-										Round(A.Total_Credit,2) as Total_Credit,
-										Round(IFNULL(A.BEG_BAL,0),2) as BEG_BAL,
-										A.TOTAL_ROWS,
+										A.Total_Debit as Total_Debit,
+										A.Total_Credit as Total_Credit,
+										IFNULL(TotalBalance,0) as Total_Balance,
+										IFNULL(A.BEG_BAL,0) as BEG_BAL,
+										count(*) Over() as Total_Rows,
 										AccountType as AccountType,
-										Round(IFNULL(DebitFrom,0),2) as DebitFrom,
-                                        Round(IFNULL(CreditFrom,0),2) as CreditFrom,
+										IFNULL(DebitFrom,0) as DebitFrom,
+                                        IFNULL(CreditFrom,0) as CreditFrom,
 										Customer_Vendor_Name
 										
 								from (
+								
+								Select 
+										'-1' as id,
+										'BEG_BAL' as Form_Flag,
+										AccountId AS ACC_ID,
+										'' AS DESCRIPTION,
+										Convert(P_ENTRY_DATE_FROM,Date) - Interval 1 year as FORM_DATE,
+										''  as Form_Reference,
+										'Beginning Balance'  as Form_TYPE,
+										null  as Debit,
+										null  as Credit,
+										IFNULL(BalanceFrom,0) as Balance,
+										'00'  as GL_FLAG ,
+										'-1'  as Detail_Id,
+										'0'   as FORM_ID,
+										TotalDebit as Total_Debit,
+										TotalCredit as Total_Credit,
+										BalanceFrom as BEG_BAL,
+										''        as Customer_Vendor_Name
+										
+										Union all
+										
+								
 										SELECT 
-                                          
+						
                                           A.id,
 										  A.FORM_FLAG,
 										  A.ACC_ID,
@@ -142,21 +164,16 @@ BEGIN
 												WHEN A.GL_FLAG = 00 THEN 'BEGNING BALANCE'
 												ELSE ''''
 											
-										  END AS FORM_TYPE,
-
-												SUM(A.DEBIT) AS DEBIT,
-											    SUM(A.CREDIT)  AS CREDIT,
-										  CASE
-												WHEN (AccountType = 3 OR AccountType = 2 OR AccountType = 5) then SUM(IFNULL(A.DEBIT, 0)-IFNULL(A.CREDIT, 0)) 
-											    when (AccountType = 1 OR AccountType = 4 OR AccountType = 6) then SUM(IFNULL(A.CREDIT, 0)-IFNULL(A.DEBIT, 0)) 			
-										  END AS BALANCE,
+										  END as FORM_TYPE,
+												A.DEBIT AS DEBIT,
+											    A.CREDIT AS CREDIT,
+										  '' as  BALANCE,
 										  A.GL_FLAG,
 										  A.DETAIL_ID,
 										  A.FORM_ID,
 										  IFNULL(TotalDebit,0) as Total_Debit,
 										  IFNULL(TotalCredit,0) as Total_Credit,
 										  IFNULL(BalanceFrom,0) as BEG_BAL, 
-										  COUNT(*) OVER() as TOTAL_ROWS,
 										  Customer_Vendor_Name
 										  
 									 FROM 
@@ -727,42 +744,55 @@ BEGIN
 													    
 														-- ADJUSTMENT Accounting--
                                                         
-                                                       							 UNION ALL 
-													   
-													 Select 
-															IFNULL(DebitFrom,0) as Debit,
-															IFNULL(CreditFrom,0) as Credit,
-															P_ACCOUNT_ID as ACCOUNT_ID,
-															AccountId AS ACC_ID,
-															AccountDescription AS DESCRIPTION,
-															AccountType AS ACCOUNT_TYPE_ID,
-															'00'  as GL_FLAG ,
-															'0000-00-00' as FORM_DATE,
-															'Beginning Balance' as Form_Reference,
-															'0'     as FORM_ID,
-															'BEG_BAL' as FORM_FLAG,
-															'-1'      as ID,
-															'-1'      as Detail_Id,
-															''        as Customer_Vendor_Name
-                                                        
-													
-											 
-									
-										) A
-										group BY
-										A.id,
-										A.FORM_FLAG,
-										A.ACC_ID,
-										A.DESCRIPTION,
-										A.FORM_DATE,
-										A.FORM_REFERENCE,
-										A.GL_FLAG,
-										A.Detail_id,
-										A.FORM_ID
-										with ROLLUP 
-										having A.id is null OR A.FORM_ID is not null
-									)A
-                                    						Order by ISNULL(A.FORM_DATE),A.FORM_DATE asc,A.FORM_ID asc,A.FORM_FLAG asc,A.Detail_ID asc,A.FORM_FLAG asc,A.GL_FLAG
+                                                      
+										
+										)A
+                                        
+										Union ALL 
+										
+										Select 
+										'-2' as id,
+										'Balance' as Form_Flag,
+										'' AS ACC_ID,
+										'' AS DESCRIPTION,
+										Convert(P_ENTRY_DATE_TO,Date) + Interval 1 year as FORM_DATE,
+										''  as Form_Reference,
+										'Balance'  as Form_TYPE,
+										IFNULL(TotalDebit,0)-IFNULL(DebitFrom,0)  as Debit,
+										IFNULL(TotalCredit,0)-IFNULL(CreditFrom,0)  as Credit,
+										IFNULL(TotalBalance,0)-IFNULL(BalanceFrom,0) as Balance,
+										'00'  as GL_FLAG ,
+										'-2'  as Detail_Id,
+										'0'   as FORM_ID,
+										TotalDebit as Total_Debit,
+										TotalCredit as Total_Credit,
+										BalanceFrom as BEG_BAL,
+										''        as Customer_Vendor_Name
+										
+										Union All 
+										
+										Select 
+										'-3' as id,
+										'Ending Balance' as Form_Flag,
+										'' AS ACC_ID,
+										'' AS DESCRIPTION,
+										Convert(P_ENTRY_DATE_TO,Date) + Interval 2 year as FORM_DATE,
+										''  as Form_Reference,
+										'Ending Balance'  as Form_TYPE,
+										 null  as Debit,
+										 null  as Credit,
+										IFNULL(TotalBalance,0) as Balance,
+										'00'  as GL_FLAG ,
+										'-3'  as Detail_Id,
+										'0'   as FORM_ID,
+										TotalDebit as Total_Debit,
+										TotalCredit as Total_Credit,
+										BalanceFrom as BEG_BAL,
+										''        as Customer_Vendor_Name
+										
+										
+									)A Order by ISNULL(A.FORM_DATE),A.FORM_DATE asc
+                                    	
 									Limit P_START,P_LENGTH;
 										
     
