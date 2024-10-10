@@ -1,6 +1,6 @@
 drop procedure if Exists PROC_GENERAL_LEDGER;
 DELIMITER $$
-CREATE PROCEDURE `PROC_GENERAL_LEDGER`( P_ACCOUNT_ID INT,
+CREATE PROCEDURE `PROC_GENERAL_LEDGER`( P_ACCOUNT_ID Text,
 										P_ENTRY_DATE_FROM TEXT,
 										P_ENTRY_DATE_TO TEXT,
 										P_START INT,
@@ -11,7 +11,7 @@ BEGIN
 
                     DECLARE BalanceFrom DECIMAL(22,2) Default 0;
                     Declare AccountType decimal Default 0;
-                    Declare AccountId decimal Default 0;
+                    Declare AccountId Text Default Null;
                     Declare AccountDescription Text Default '';
 					Declare BalanceTo decimal(22,2) Default 0;
 					Declare TotalDebit decimal(22,2) default 0;
