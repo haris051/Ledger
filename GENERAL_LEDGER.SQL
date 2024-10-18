@@ -107,8 +107,7 @@ BEGIN
 										count(*) Over() as Total_Rows,
 										AccountType as AccountType,
 										IFNULL(DebitFrom,0) as DebitFrom,
-                                        IFNULL(CreditFrom,0) as CreditFrom,
-										Customer_Vendor_Name
+                                        IFNULL(CreditFrom,0) as CreditFrom
 										
 								from (
 								
@@ -128,8 +127,7 @@ BEGIN
 										'0'   as FORM_ID,
 										TotalDebit as Total_Debit,
 										TotalCredit as Total_Credit,
-										BalanceFrom as BEG_BAL,
-										''        as Customer_Vendor_Name
+										BalanceFrom as BEG_BAL
 										
 										Union all
 										
@@ -161,6 +159,7 @@ BEGIN
 												WHEN A.GL_FLAG = 71 OR A.GL_FLAG = 72 THEN 'General Journal'
 												WHEN A.GL_FLAG = 75 OR A.GL_FLAG = 76 or A.GL_FLAG = 77 OR A.GL_FLAG = 78 THEN 'Repair IN'
 												WHEN A.GL_FLAG = 73 OR A.GL_FLAG = 74 THEN 'Repair Out'
+												When A.GL_FLAG = 5556 OR A.GL_FLAG = 5557 OR A.GL_FLAG = 5558 OR A.GL_FLAG = 5559 then 'Transient Inventory'
 												WHEN A.GL_FLAG = 00 THEN 'BEGNING BALANCE'
 												ELSE ''''
 											
@@ -173,8 +172,7 @@ BEGIN
 										  A.FORM_ID,
 										  IFNULL(TotalDebit,0) as Total_Debit,
 										  IFNULL(TotalCredit,0) as Total_Credit,
-										  IFNULL(BalanceFrom,0) as BEG_BAL, 
-										  Customer_Vendor_Name
+										  IFNULL(BalanceFrom,0) as BEG_BAL
 										  
 									 FROM 
 										(
@@ -187,7 +185,9 @@ BEGIN
 																	WHEN (A.GL_FLAG = 57) THEN A.AMOUNT
 																	WHEN (A.GL_FLAG = 59) THEN A.AMOUNT
 																	WHEN (A.GL_FLAG = 64) THEN A.AMOUNT
-															
+															        When (A.GL_FLAG = 5556) Then A.AMOUNT 
+																	When (A.GL_FLAG = 5559) Then A.AMOUNT
+																	
 															END AS DEBIT,
 														
 															CASE
@@ -197,7 +197,9 @@ BEGIN
 																	WHEN (A.GL_FLAG = 62)  THEN A.AMOUNT 
 																	when (A.GL_FLAG = 150) Then A.Amount
 																	When (A.GL_FLAG = 151) Then A.Amount
-															
+															        When (A.GL_FLAG = 5557) Then A.Amount 
+																	when (A.GL_FLAG = 5558) Then A.Amount
+																	
 															END AS CREDIT,
 																	A.GL_ACC_ID AS ACCOUNT_ID           ,
 																	AccountId AS ACC_ID                 ,
@@ -209,24 +211,10 @@ BEGIN
 																	A.Form_Id AS FORM_ID                ,
 																	A.FORM_FLAG                         ,
 																	A.ID                                ,
-																	A.Form_Detail_Id AS DETAIL_ID 		,
-																	case 
-																	      when A.FORM_FLAG = 'StockTransfer' then B.ST_COMPANY_TO_NAME
-																	      when A.FORM_FLAG = 'StockIn' then C.SN_Company_From_Name
-																	END as Customer_Vendor_Name 
+																	A.Form_Detail_Id AS DETAIL_ID 		 
 													FROM 
 																
 															Stock_Accounting A
-													
-													Left Join
-													
-																Stock_Transfer B 
-													ON     		(A.FORM_ID = B.id and A.FORM_FLAG ='StockTransfer')
-													
-													LEFT join 
-																Stock_IN C 
-													ON 			(A.FORM_ID = C.id and A.FORM_FLAG = 'StockIn')
-													
 													WHERE 
 													(
 															CASE
@@ -296,18 +284,9 @@ BEGIN
 															A.Form_Id AS FORM_ID                        ,
 															A.FORM_FLAG                                 ,
 															A.ID                                        ,
-															A.Form_Detail_Id AS DETAIL_ID               ,
-															case 
-																	when A.FORM_FLAG = 'RepairOut' 
-																	then B.RE_REPAIR_COMPANY_NAME 
-															end as Customer_Vendor_Name
+															A.Form_Detail_Id AS DETAIL_ID               
 													FROM
-															Repair_Accounting A
-												    Left join 
-															Repair_Out B  
-													ON 
-															(A.Form_ID = B.id and A.FORM_FLAG = 'RepairOut')
-															
+															Repair_Accounting A		
 													WHERE 
 															CASE
 																	
@@ -408,39 +387,9 @@ BEGIN
 															A.Form_Id AS FORM_ID                        ,
 															A.FORM_FLAG                                 ,
 															A.ID                                        ,
-															A.Form_Detail_Id AS DETAIL_ID               ,
-															case 
-																 when A.FORM_FLAG = 'PaymentSent' and B.IS_VENDOR = 'Y' then B.PS_VENDOR_NAME 
-																 when A.FORM_FLAG = 'PaymentSent' and B.IS_VENDOR = 'N' then B.PS_CUSTOMER_NAME
-																 when A.FORM_FLAG = 'PaymentSent' and B.IS_VENDOR = 'R' then B.PS_REP_COM_NAME
-																 when A.FORM_FLAG = 'ReceiveMoney' and C.IS_VENDOR = 'Y' then C.RM_VENDOR_NAME
-																 when A.FORM_FLAG = 'ReceiveMoney' and C.IS_VENDOR = 'N' then C.RM_CUSTOMER_NAME
-																 when A.Form_Flag = 'Payments' then D.PAY_VENDOR_NAME
-																 when A.FORM_FLAG = 'Receipts' then E.REC_CUSTOMER_NAME
-																 when A.FORM_FLAG = 'Charges' then F.C_REP_COM_NAME
-															END 
-																 as Customer_Vendor_Name	
+															A.Form_Detail_Id AS DETAIL_ID               	
 													FROM
-															Payments_Accounting A
-															
-													LEFT JOIN 
-															Payment_Sent B 
-													ON      (A.FORM_ID = B.id and A.FORM_FLAG = 'PaymentSent')
-													
-													LEFT JOIN 
-															 Receive_Money C 
-													ON      (A.FORM_ID = C.id and A.FORM_FLAG = 'ReceiveMoney')
-													LEFT Join 
-															Payments D 
-													ON      (A.FORM_ID = D.id and A.FORM_FLAG = 'Payments')
-													LEFT Join 
-															Receipts E 
-													ON 		(A.FORM_ID = E.id and A.FORM_FLAG = 'Receipts')
-													LEFT Join 
-															Charges F 
-													ON      (A.FORM_ID = F.id and A.FORM_FLAG = 'Charges')
-													
-															
+															Payments_Accounting A		
 													WHERE
 													
 													(
@@ -534,22 +483,9 @@ BEGIN
 															  A.FORM_ID AS FORM_ID                  ,
 															  A.FORM_FLAG                           ,
 															  A.ID                                  ,
-															  A.Form_Detail_Id AS DETAIL_ID         ,
-															  case 
-																	when A.FORM_FLAG = 'Saleinvoice' then B.SI_CUSTOMER_NAME
-																	when A.FORM_FLAG = 'Salereturn' then C.SR_CUSTOMER_NAME
-																	when A.FORM_FLAG = 'Replacement' then D.REP_CUSTOMER_NAME
-															  END as Customer_Vendor_Name
-													          
+															  A.Form_Detail_Id AS DETAIL_ID         
 													FROM          
 																Sales_Accounting A
-													LEFT JOIN	Sale_Invoice B 
-													ON 			(A.FORM_ID = B.Id and A.FORM_FLAG = 'Saleinvoice')
-													LEFT JOIN   Sale_Return C 
-													ON          (A.FORM_ID = C.ID and A.FORM_FLAG = 'Salereturn')
-													LEFT JOIN   REPLACEMENT D 
-													ON          (A.FORM_ID = D.ID and A.FORM_FLAG = 'Replacement')
-													
 													WHERE
 													
 													(
@@ -620,22 +556,9 @@ BEGIN
 																	A.FORM_ID AS FORM_ID,
 																	A.FORM_FLAG,
 																	A.ID,
-																	A.Form_Detail_Id AS DETAIL_ID,
-																	case 
-																		when A.FORM_FLAG = 'VendorCreditMemo' then B.VCM_VENDOR_NAME
-																		when A.FORM_FLAG = 'PartialCredit' then C.PC_PERSON_NAME
-																		when A.FORM_FLAG = 'ReceiveOrder' then D.RO_VENDOR_NAME
-																	END as Customer_Vendor_Name 
+																	A.Form_Detail_Id AS DETAIL_ID 
 													FROM 
-																	Purchase_Accounting A
-													LEFT JOIN       Vendor_Credit_Memo B 
-													ON              (A.FORM_ID = B.id and A.FORM_FLAG = 'VendorCreditMemo')
-													LEFT JOIN       Partial_Credit C 	
-													ON              (A.FORM_ID = C.id and A.FORM_FLAG = 'PartialCredit')	
-													LEFT JOIN 		Receive_Order D 
-													ON              (A.FORM_ID = D.id and A.FORM_FLAG = 'ReceiveOrder')
-													
-															
+																	Purchase_Accounting A		
 													WHERE
 													
 													(
@@ -706,8 +629,7 @@ BEGIN
 																	 A.FORM_ID AS FORM_ID,
 																	 A.FORM_FLAG,
 																	 A.ID,
-																	 A.Form_Detail_Id AS DETAIL_ID,
-																	 '' as Customer_Vendor_Name
+																	 A.Form_Detail_Id AS DETAIL_ID
 													FROM
 													
 																	Adjustment_Accounting  A
@@ -766,8 +688,7 @@ BEGIN
 										'0'   as FORM_ID,
 										TotalDebit as Total_Debit,
 										TotalCredit as Total_Credit,
-										BalanceFrom as BEG_BAL,
-										''        as Customer_Vendor_Name
+										BalanceFrom as BEG_BAL
 										
 										Union All 
 										
@@ -787,8 +708,7 @@ BEGIN
 										'0'   as FORM_ID,
 										TotalDebit as Total_Debit,
 										TotalCredit as Total_Credit,
-										BalanceFrom as BEG_BAL,
-										''        as Customer_Vendor_Name
+										BalanceFrom as BEG_BAL
 										
 										
 									)A Order by ISNULL(A.FORM_DATE),A.FORM_DATE asc
@@ -798,3 +718,4 @@ BEGIN
     
 END $$
 DELIMITER ;
+
